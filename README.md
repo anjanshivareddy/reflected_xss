@@ -11,12 +11,7 @@
 
 | Member name | Roll number | Category | Variant implemented |
 | :--- | :--- | :--- | :--- |
-| **[Student Name]** *(Your Name)* | **[Roll Number]** *(e.g. IIT2023xxx)* | Cross-Site Scripting (XSS) | Variant 2: Reflected XSS |
-| *[Member 2 Name]* | *[Roll 2]* | SQL injection | Authentication bypass / UNION extraction |
-| *[Member 3 Name]* | *[Roll 3]* | OS command injection | In-band / Blind |
-| *[Member 4 Name]* | *[Roll 4]* | Cross-Site Request Forgery (CSRF) | GET-based / POST-based |
-
-> **Note for Viva / Submission:** Replace `[Student Name]` and `[Roll Number]` with your actual name and roll number before pushing to your public GitHub repository.
+| **Anjan Shiva Reddy** | **IIT2024265** | Cross-Site Scripting (XSS) | Variant 2: Reflected XSS |
 
 ---
 
@@ -196,7 +191,7 @@ Use this step-by-step walkthrough script for recording your video:
 
 | Time | Action | What to Say / Demonstrate |
 | :---: | :--- | :--- |
-| **0:00 - 0:30** | Show Ownership Table & App Overview | *"Hello, I am [Your Name], Roll Number [Your Roll Number]. For our Web Server Security assignment in IT-30001 under Dr. Soumyadev Maity, I am demonstrating Category 3: Cross-Site Scripting, Variant 2: Reflected XSS."* |
+| **0:00 - 0:30** | Show Ownership Table & App Overview | *"Hello, I am Anjan Shiva Reddy, Roll Number IIT2024265. For our Web Server Security assignment in IT-30001 under Dr. Soumyadev Maity, I am demonstrating Category: Cross-Site Scripting (XSS), Variant 2: Reflected XSS."* |
 | **0:30 - 1:00** | Demonstrate (a) Vulnerable Mode & (b) Exploit | *"Here is the Campus Directory Search. In Vulnerable Mode (`/vulnerable`), notice the session cookie `demo_session=IIITA_Student_123`. When I submit a normal search for 'Alice', it displays Alice's directory card. Now, I inject the working XSS payload: `<script>alert('Reflected XSS Executed! Cookie: ' + document.cookie)</script>`. Upon submitting, the browser immediately executes the script, popping up the alert showing cookie access."* |
 | **1:00 - 1:40** | Explain (c) Root Cause & Code Path | *"The root cause is unencoded reflection at line 857 of `app.py`. The server took untrusted query parameter `q` and directly concatenated it into the HTML stream. As shown in the Raw Server Inspector box below, raw `<script>` tags were delivered in the response body, causing the browser parser to execute them."* |
 | **1:40 - 2:20** | Demonstrate (d) Mitigation & Tab Switch | *"Now, switching to Secured Mode (`/secure`) via the top tab. Submitting the identical exploit payload: the script does NOT execute! The search term is safely printed as literal text. In `app.py` line 896, we implemented context-aware HTML entity encoding using Python's `html.escape()`. As shown in the Inspector box, `<script>` was transformed into safe entities `&lt;script&gt;`."* |

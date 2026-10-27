@@ -9,7 +9,7 @@ VARIANT: REFLECTED XSS (VARIANT 2)
 ========================================================================================
 
 Demonstration Web Application: Campus Directory Search
-Author: [Student Name] (Roll No: [Student Roll Number])
+Author: Anjan Shiva Reddy (Roll No: IIT2024265)
 Instructor: Dr. Soumyadev Maity
 
 Table 2 Viva & Walkthrough Mapping:
@@ -655,7 +655,7 @@ def build_page_template(mode: str, query: str, reflected_output: str, is_vulnera
         <div class="inst-container">
             <div class="inst-titles">
                 <h1>IIIT Allahabad &bull; Department of Information Technology</h1>
-                <p>Cyber Security (IT-30001) &bull; Reflected XSS Vulnerability & Defense Lab</p>
+                <p>Cyber Security (IT-30001) &bull; Reflected XSS Vulnerability & Defense Lab &bull; <strong>Roll No: IIT2024265</strong></p>
             </div>
             <div class="cookie-badge">
                 <div>Demo Session Cookie:</div>
