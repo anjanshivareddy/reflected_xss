@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IT-30001 Cyber Security Report - IIT2024265 - Reflected XSS</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 16mm 16mm 16mm 16mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Charter", "Georgia", "Times New Roman", serif;
+            color: #1e293b;
+            line-height: 1.5;
+            font-size: 9.5pt;
+            background: #ffffff;
+            padding: 0;
+        }
+
+        /* Institutional Header */
+        .academic-header {
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        .inst-name {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 12pt;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .dept-name {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 9.5pt;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-top: 2px;
+        }
+        .course-meta {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 8.5pt;
+            color: #475569;
+            margin-top: 2px;
+        }
+
+        /* Document Title */
+        .report-title-block {
+            margin-bottom: 16px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 12px 16px;
+        }
+        .report-main-title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 13.5pt;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.25;
+            text-align: center;
+        }
+        .report-subtitle {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 9.5pt;
+            font-weight: 600;
+            color: #2563eb;
+            margin-top: 3px;
+            text-align: center;
+        }
+
+        /* Metadata Grid */
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 8.5pt;
+            margin-top: 10px;
+        }
+        .meta-table td {
+            padding: 4px 6px;
+            border-top: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        .meta-label {
+            font-weight: 700;
+            color: #475569;
+            white-space: nowrap;
+            width: 16%;
+        }
+        .meta-value {
+            color: #0f172a;
+            width: 34%;
+        }
+
+        /* Section Headings */
+        h2 {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 11pt;
+            font-weight: 800;
+            color: #0f172a;
+            border-left: 3.5px solid #1e3a8a;
+            padding-left: 8px;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        h3 {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 10pt;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-top: 12px;
+            margin-bottom: 5px;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        h4 {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 9pt;
+            font-weight: 700;
+            color: #334155;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+
+        p {
+            margin-bottom: 7px;
+            text-align: justify;
+            orphans: 3;
+            widows: 3;
+        }
+
+        /* Tables */
+        table.content-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0 14px 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 8.5pt;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        table.content-table th, table.content-table td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 9px;
+            text-align: left;
+        }
+        table.content-table th {
+            background-color: #1e3a8a;
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            font-size: 8pt;
+        }
+        table.content-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: 7.8pt;
+            line-height: 1.4;
+            margin: 6px 0 10px 0;
+            overflow-x: auto;
+            border-left: 3px solid #3b82f6;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        code {
+            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: 8pt;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 1px 3px;
+            border-radius: 3px;
+            border: 1px solid #e2e8f0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+            border: none;
+        }
+
+        /* Callout & Root Cause */
+        .root-cause-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 9pt;
+            color: #991b1b;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        /* Evidence & Figure Cards */
+        .figure-card {
+            margin: 10px 0 14px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            background: #ffffff;
+            padding: 8px;
+            text-align: center;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .figure-card img {
+            max-width: 95%;
+            max-height: 250px;
+            object-fit: contain;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .figure-caption {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 8pt;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        /* Defense in depth list */
+        .mitigation-list dt {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-top: 8px;
+            font-size: 9pt;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        .mitigation-list dd {
+            margin-left: 12px;
+            margin-bottom: 7px;
+            font-size: 8.8pt;
+            text-align: justify;
+            orphans: 3;
+            widows: 3;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Academic Letterhead -->
+    <header class="academic-header">
+        <div class="inst-name">Indian Institute of Information Technology Allahabad</div>
+        <div class="dept-name">Department of Information Technology</div>
+        <div class="course-meta">
+            Cyber Security (IT-30001) &bull; Autumn Semester 2026 &bull; Instructor: Dr. Soumyadev Maity
+        </div>
+    </header>
+
+    <!-- Report Title Banner -->
+    <div class="report-title-block">
+        <h1 class="report-main-title">ASSIGNMENT REPORT: WEB SERVER SECURITY</h1>
+        <div class="report-subtitle">Exploitation and Mitigation of Reflected Cross-Site Scripting (XSS)</div>
+        <table class="meta-table">
+            <tr>
+                <td class="meta-label">Course:</td>
+                <td class="meta-value">Cyber Security (IT-30001)</td>
+                <td class="meta-label">Group ID:</td>
+                <td class="meta-value"><strong>Group 16</strong></td>
+            </tr>
+            <tr>
+                <td class="meta-label">Student Name:</td>
+                <td class="meta-value"><strong>BENDRAM ANJAN SHIVA REDDY</strong></td>
+                <td class="meta-label">Roll Number:</td>
+                <td class="meta-value"><strong>IIT2024265</strong></td>
+            </tr>
+            <tr>
+                <td class="meta-label">Vulnerability Category:</td>
+                <td class="meta-value">Cross-Site Scripting (XSS)</td>
+                <td class="meta-label">Variant Implemented:</td>
+                <td class="meta-value"><strong>Variant 2 &mdash; Reflected XSS</strong></td>
+            </tr>
+            <tr>
+                <td class="meta-label">Course Instructor:</td>
+                <td class="meta-value">Dr. Soumyadev Maity</td>
+                <td class="meta-label">Repository:</td>
+                <td class="meta-value"><code>github.com/anjanshivareddy/reflected_xss</code></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Section 1 -->
+    <h2>1. Ownership Declaration (Table 3)</h2>
+    <p>In accordance with Section 3 of the course assignment instructions, the ownership declaration mapping my assigned vulnerability variant is formally declared in Table 1 below:</p>
+
+    <table class="content-table">
+        <thead>
+            <tr>
+                <th style="width: 35%;">Member Name</th>
+                <th style="width: 20%;">Roll Number</th>
+                <th style="width: 25%;">Category</th>
+                <th style="width: 20%;">Variant Implemented</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>BENDRAM ANJAN SHIVA REDDY</strong></td>
+                <td><strong>IIT2024265</strong></td>
+                <td>Cross-Site Scripting (XSS)</td>
+                <td>Reflected XSS (Variant 2)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Section 2 -->
+    <h2>2. Overview of Cross-Site Scripting (XSS) & Its Variants</h2>
+    <p>
+        <strong>Cross-Site Scripting (XSS)</strong> (cataloged as CWE-79) is a major client-side code injection vulnerability. It occurs when a web server receives untrusted input from an external user and renders it into a web document delivered to the browser without adequate contextual validation, sanitization, or entity encoding. Because web browsers execute all scripts originating from a trusted server origin under the <em>Same-Origin Policy (SOP)</em>, injected malicious scripts execute with the full privileges of the victim's authenticated session.
+    </p>
+
+    <h3>2.1 Comparison of Assignment Variants</h3>
+    <p>As defined in Table 1 of the course assignment brief, Cross-Site Scripting is categorized into two canonical variants:</p>
+
+    <table class="content-table">
+        <thead>
+            <tr>
+                <th style="width: 22%;">Property</th>
+                <th style="width: 39%;">Variant 1: Stored XSS (Persistent)</th>
+                <th style="width: 39%;">Variant 2: Reflected XSS (Non-Persistent)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Storage Mechanism</strong></td>
+                <td>Persisted permanently in server storage (database, forum post, comment system).</td>
+                <td>Non-persistent; never stored on disk. Reflected immediately in the HTTP response.</td>
+            </tr>
+            <tr>
+                <td><strong>Delivery Vector</strong></td>
+                <td>Any user visiting the compromised webpage automatically loads the stored script.</td>
+                <td>Victim must be coerced into clicking a crafted hyperlink containing payload parameters (e.g., via phishing).</td>
+            </tr>
+            <tr>
+                <td><strong>Victim Scope</strong></td>
+                <td>Broad, multi-victim impact (asynchronous execution against any visitor).</td>
+                <td>Targeted single-session execution per request.</td>
+            </tr>
+            <tr>
+                <td><strong>Server Role</strong></td>
+                <td>Passive storage host; retrieves bad data during subsequent read queries.</td>
+                <td>Active reflector; echoes request parameter directly into response HTML stream.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        <strong>Variant 1: Stored XSS (Persistent XSS):</strong> In Stored XSS, the attacker submits malicious payload data to the server (e.g., a student discussion post or user profile field). The server saves this raw input into a database. Later, whenever legitimate users browse to that view, the application constructs the response HTML incorporating the contaminated database record without escaping. This results in automatic script execution in every visitor's browser without requiring individual phishing lures.
+    </p>
+    <p>
+        <strong>Variant 2: Reflected XSS (Non-Persistent XSS) &mdash; <em>Assigned Variant</em>:</strong> In Reflected XSS, the injected payload is delivered as part of the immediate HTTP request (typically as an HTTP GET query parameter such as <code>?q=&lt;script&gt;...</code>). The server takes this parameter and immediately echoes it back into the resulting HTML response body. Execution occurs instantly upon response rendering within the specific victim's browser session.
+    </p>
+
+    <!-- Section 3 -->
+    <h2>3. Detailed Implementation of Assigned Variant: Reflected XSS (Variant 2)</h2>
+    <p>
+        To model Reflected XSS, a complete educational web application was developed in Python using Flask (<code>app.py</code>), simulating a <strong>Campus Directory Search</strong> for IIIT Allahabad.
+    </p>
+
+    <h3>(a) Vulnerable Implementation</h3>
+    <p>
+        The vulnerable endpoint is mapped to <code>/vulnerable</code>. It extracts the search query from the GET parameter <code>q</code> and interpolates it directly into the HTML response without output encoding:
+    </p>
+
+    <pre><code># (a) VULNERABLE IMPLEMENTATION: Unencoded user input reflected directly in HTML.
+@app.route('/vulnerable')
+def vulnerable_search():
+    query = request.args.get('q', '')
+    reflected_output = query  # Injected directly into HTML response document
+
+    rendered_html = build_page_template(
+        mode='vulnerable',
+        query=query,
+        reflected_output=reflected_output,
+        is_vulnerable=True
+    )
+
+    response = make_response(rendered_html)
+    # Set non-sensitive session cookie without HttpOnly to demonstrate cookie theft
+    response.set_cookie('demo_session', 'IIITA_Student_123', samesite='Lax')
+    return response</code></pre>
+
+    <p>
+        <strong>Flaw Breakdown:</strong> Inside <code>build_page_template()</code>, the variable <code>reflected_output</code> is placed directly into the markup:
+        <code>&lt;span class="reflected-term" id="reflected-output"&gt;{reflected_output}&lt;/span&gt;</code>.
+        Because the server performs no encoding or sanitization, user data breaches the boundary between markup structure and text content.
+    </p>
+
+    <h3>(b) Working Exploit & Evidence</h3>
+    <p><strong>1. Exact Working Exploit Payload:</strong></p>
+    <pre><code>&lt;script&gt;alert('Reflected XSS Executed! Cookie: ' + document.cookie)&lt;/script&gt;</code></pre>
+
+    <p><strong>2. Full HTTP GET Exploit Request:</strong></p>
+    <pre><code>GET /vulnerable?q=%3Cscript%3Ealert('Reflected+XSS+Executed!+Cookie:+'+%2B+document.cookie)%3C/script%3E HTTP/1.1
+Host: 127.0.0.1:5001</code></pre>
+
+    <p>
+        <strong>3. Execution Mechanics & Cookie Access:</strong>
+        When the Flask server returns the response, the browser parser encounters <code>&lt;script&gt;</code>, enters the script data parsing state, and executes the contained JavaScript. The script reads <code>document.cookie</code>, successfully exfiltrating the demonstration session cookie: <code>demo_session=IIITA_Student_123</code>.
+    </p>
+
+    <div class="figure-card">
+        <img src="screenshots/vulnerable_page.png" alt="Working Reflected XSS Exploit Demonstration">
+        <div class="figure-caption">Figure 1: Reflected XSS Execution on <code>/vulnerable</code> &mdash; Browser modal alert displaying the exfiltrated session cookie (<code>demo_session=IIITA_Student_123</code>).</div>
+    </div>
+
+    <h3>(c) Root Cause Analysis</h3>
+    <div class="root-cause-box">
+        <strong>Root Cause Statement:</strong><br>
+        User-controlled input from the HTTP GET request is reflected directly into the HTML DOM context without output encoding, causing the browser's HTML parser to switch from data state to script execution state.
+    </div>
+
+    <!-- Section 4 -->
+    <h2>4. Mitigation Techniques for Cross-Site Scripting</h2>
+
+    <h3>(d) Mitigation Implemented &mdash; Context-Aware Output Encoding</h3>
+    <p>
+        The defense is implemented on route <code>/secure</code> using Python's built-in <code>html.escape()</code> module function, providing standard context-aware HTML entity encoding:
+    </p>
+
+    <pre><code># (d) MITIGATION IMPLEMENTED: Context-aware HTML entity encoding.
+@app.route('/secure')
+def secure_search():
+    query = request.args.get('q', '')
+    
+    # Context-aware output encoding: transforms <, >, &, ", ' into safe entities
+    safe_query = html.escape(query)
+    reflected_output = safe_query
+
+    rendered_html = build_page_template(
+        mode='secure',
+        query=query,
+        reflected_output=reflected_output,
+        is_vulnerable=False
+    )
+
+    response = make_response(rendered_html)
+    response.set_cookie('demo_session', 'IIITA_Student_123', samesite='Lax')
+    return response</code></pre>
+
+    <p><strong>Entity Conversion Mechanics:</strong> Special syntax characters are converted to named entities:</p>
+    <table class="content-table">
+        <thead>
+            <tr>
+                <th style="width: 14%;">Character</th>
+                <th style="width: 36%;">Exploit Context</th>
+                <th style="width: 25%;">Safe HTML Entity</th>
+                <th style="width: 25%;">Browser DOM Effect</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><code>&lt;</code></td><td>Opens script or element tag</td><td><code>&amp;lt;</code></td><td>Rendered as literal glyph <code>&lt;</code></td></tr>
+            <tr><td><code>&gt;</code></td><td>Closes element tag</td><td><code>&amp;gt;</code></td><td>Rendered as literal glyph <code>&gt;</code></td></tr>
+            <tr><td><code>&amp;</code></td><td>Introduces entity reference</td><td><code>&amp;amp;</code></td><td>Rendered as literal glyph <code>&amp;</code></td></tr>
+            <tr><td><code>"</code></td><td>Breaks attribute delimiter</td><td><code>&amp;quot;</code></td><td>Rendered as literal glyph <code>"</code></td></tr>
+            <tr><td><code>'</code></td><td>Breaks single-quoted attribute</td><td><code>&amp;#x27;</code></td><td>Rendered as literal glyph <code>'</code></td></tr>
+        </tbody>
+    </table>
+
+    <p>
+        <strong>Verification of Blocked Exploit:</strong> When the identical payload is submitted to <code>/secure</code>, the HTTP response delivers <code>&amp;lt;script&amp;gt;...&amp;lt;/script&amp;gt;</code>. The browser HTML parser maintains the <code>DATA_STATE</code>, treating the string purely as character text. <strong>Zero script execution occurs</strong>, no alert fires, and cookie confidentiality is preserved.
+    </p>
+
+    <div class="figure-card">
+        <img src="screenshots/secure_page.png" alt="Secured Endpoint Blocking XSS Attempt">
+        <div class="figure-caption">Figure 2: Secured Endpoint (<code>/secure</code>) &mdash; Payload rendered harmlessly as plain text; Inspector confirms entity encoding (<code>&amp;lt;script&amp;gt;</code>).</div>
+    </div>
+
+    <!-- Section 4(e) -->
+    <h3>(e) All Other XSS Mitigation Techniques (Theory from Lecture Slides)</h3>
+    <dl class="mitigation-list">
+        <dt>1. Framework Auto-Escaping</dt>
+        <dd>
+            Modern server-side and client-side templating frameworks (e.g., Jinja2 in Flask, Django Templates, Angular, React JSX) enforce context-aware output encoding by default. Unless a software engineer intentionally disables this protection through unsafe directives (such as <code>|safe</code> in Jinja2 or <code>dangerouslySetInnerHTML</code> in React), all dynamically injected variables are automatically converted into safe HTML entities before rendering.
+        </dd>
+
+        <dt>2. HTML Sanitiser for Rich HTML</dt>
+        <dd>
+            Standard entity encoding is destructive in scenarios where users legitimately need to provide formatted rich text (such as announcements, blog comments, or documentation containing <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>, or <code>&lt;a&gt;</code>). An HTML sanitizer (e.g., <em>DOMPurify</em> on the client or <em>Bleach</em> on the server) parses the untrusted input into a DOM tree and filters it against a strict allow-list. Dangerous active elements (<code>&lt;script&gt;</code>, <code>&lt;iframe&gt;</code>, <code>&lt;object&gt;</code>) and event handlers (<code>onerror</code>, <code>onload</code>, <code>onclick</code>, <code>javascript:</code> URLs) are stripped, while harmless markup is preserved.
+        </dd>
+
+        <dt>3. Content Security Policy (CSP)</dt>
+        <dd>
+            Content Security Policy is an HTTP response header (e.g., <code>Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-xyz123'</code>) acting as a browser-enforced defense-in-depth barrier. It instructs the browser to restrict script execution exclusively to trusted host domains or to script blocks bearing a valid cryptographic nonce. Even if an unencoded reflected XSS flaw exists on the page, CSP actively prevents the injected inline <code>&lt;script&gt;</code> or <code>eval()</code> from executing.
+        </dd>
+
+        <dt>4. HttpOnly Cookies</dt>
+        <dd>
+            The <code>HttpOnly</code> attribute is attached to sensitive session cookies via the <code>Set-Cookie</code> response header (e.g., <code>Set-Cookie: session=xyz; Secure; HttpOnly; SameSite=Lax</code>). This instructs modern browsers that the cookie must never be accessible through client-side JavaScript APIs such as <code>document.cookie</code>. While <code>HttpOnly</code> does not prevent script injection itself, it eliminates the primary risk of XSS &mdash; automated credential theft and session hijacking.
+        </dd>
+
+        <dt>5. Safe DOM Sinks</dt>
+        <dd>
+            In modern frontend engineering, DOM-based XSS emerges when untrusted data is passed into execution-capable DOM manipulation sinks that trigger the browser's HTML parser (e.g., <code>element.innerHTML</code>, <code>document.write()</code>). Developers mitigate this by consistently adopting safe, non-executable DOM sinks such as <code>element.textContent</code> or <code>element.innerText</code>, which guarantee that input is processed exclusively as character nodes rather than executable markup.
+        </dd>
+    </dl>
+
+    <!-- Section 5 -->
+    <h2>5. Comparative Technical Summary</h2>
+    <table class="content-table">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Execution Phase</th>
+                <th style="width: 37%;">Vulnerable Mode (<code>/vulnerable</code>)</th>
+                <th style="width: 38%;">Secured Mode (<code>/secure</code>)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>HTTP Request</strong></td>
+                <td><code>GET /vulnerable?q=&lt;script&gt;...</code></td>
+                <td><code>GET /secure?q=&lt;script&gt;...</code></td>
+            </tr>
+            <tr>
+                <td><strong>Server Processing</strong></td>
+                <td>Direct string interpolation without escaping</td>
+                <td>Contextual entity encoding via <code>html.escape()</code></td>
+            </tr>
+            <tr>
+                <td><strong>Response Fragment</strong></td>
+                <td><code>&lt;span&gt;&lt;script&gt;alert(...)&lt;/script&gt;&lt;/span&gt;</code></td>
+                <td><code>&lt;span&gt;&amp;lt;script&amp;gt;alert(...)&amp;lt;/script&amp;gt;&lt;/span&gt;</code></td>
+            </tr>
+            <tr>
+                <td><strong>Browser Parsing</strong></td>
+                <td>Transitions to <code>SCRIPT_DATA_STATE</code></td>
+                <td>Remains strictly in <code>DATA_STATE</code></td>
+            </tr>
+            <tr>
+                <td><strong>Exploit Execution</strong></td>
+                <td>JavaScript executes; cookie stolen in alert</td>
+                <td>Zero execution; payload displayed as plain text</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Section 6 -->
+    <h2>6. Conclusion</h2>
+    <p>
+        This lab investigated the vulnerability mechanics and defensive architecture of <strong>Reflected Cross-Site Scripting (Variant 2)</strong>. The experiment proved that untrusted input must never be reflected into an HTML document context without contextual encoding. By applying <strong>Context-Aware Output Encoding</strong> via <code>html.escape()</code>, the flaw was successfully mitigated. Complementary defenses &mdash; framework auto-escaping, HTML sanitizers, Content Security Policy (CSP), HttpOnly cookies, and safe DOM sinks &mdash; were documented to provide comprehensive protection against client-side code injection.
+    </p>
+
+    <div style="margin-top: 24px; border-top: 1px solid #cbd5e1; padding-top: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 8pt; color: #475569; display: flex; justify-content: space-between;">
+        <div>
+            <strong>Student:</strong> BENDRAM ANJAN SHIVA REDDY (IIT2024265)<br>
+            <strong>Group:</strong> Group 16 &bull; Cyber Security (IT-30001)
+        </div>
+        <div style="text-align: right;">
+            <strong>Department of Information Technology</strong><br>
+            Indian Institute of Information Technology Allahabad
+        </div>
+    </div>
+
+</body>
+</html>
